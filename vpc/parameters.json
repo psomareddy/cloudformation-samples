@@ -1,0 +1,10 @@
+[
+    {
+        "ParameterKey": "CustomerName",
+        "ParameterValue": "demandware"
+    },
+    {
+        "ParameterKey": "VpcCidrBlock",
+        "ParameterValue": "10.192.1.0/16"
+    }
+]

@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create VPC with Subnet and Security Groups
+
+Parameters:
+  CustomerName:
+    Description: Enter the name of your customer with no spaces.
+    Type: String
+  VpcCidrBlock:
+    Default: 10.192.0.0/16
+    Description: Enter the IP range (CIDR notation) for VPC
+    Type: String
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidrBlock
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref CustomerName, "Vpc"]]
+        - Key: CustomerName
+          Value: !Ref CustomerName
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref CustomerName, "vpc", "IGw"]]
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+  Route:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  Subnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select [0, !Cidr [!GetAtt 'VPC.CidrBlock', 5, 8]]
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs { Ref: "AWS::Region" }
+      Tags: [{ "Key": "CustomerName", "Value": !Ref CustomerName }]
+  Subnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet1
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP access via user defined port
+      GroupName: webserver-securitygroup
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          FromPort: 80
+          IpProtocol: tcp
+          ToPort: 80
+      Tags: [{ "Key": "CustomerName", "Value": !Ref CustomerName }]
+  SSHSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH access via port 22
+      GroupName: ssh-securitygroup
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          FromPort: 22
+          IpProtocol: tcp
+          ToPort: 22
+      Tags: [{ "Key": "CustomerName", "Value": !Ref CustomerName }]
+
+Outputs:
+  VPCId:
+    Value: !Ref VPC
+    Export:
+      Name: !Join ["-", [!Ref CustomerName, "Vpc", "Id"]]
+  Subnet1Id:
+    Value: !Ref Subnet1
+    Export:
+      Name: !Join ["-", [!Ref CustomerName, "Subnet1", "Id"]]
+  SSHSecurityGroupId:
+    Value: !Ref SSHSecurityGroup
+    Export:
+      Name: !Join ["-", [!Ref CustomerName, "SSHSecurityGroup", "Id"]]
+  WebServerSecurityGroupId:
+    Value: !Ref WebServerSecurityGroup
+    Export:
+      Name: !Join ["-", [!Ref CustomerName, "WebServerSecurityGroup", "Id"]]

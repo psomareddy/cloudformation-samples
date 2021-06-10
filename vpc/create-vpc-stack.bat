@@ -1,0 +1,1 @@
+aws cloudformation create-stack --stack-name demandware-vpc-stack --template-body file://vpc.YAML --region us-west-2 --role-arn "arn:aws:iam::854771319312:role/cloudformation-role" --parameters file://parameters.json

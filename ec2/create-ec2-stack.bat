@@ -1,0 +1,1 @@
+aws cloudformation create-stack --stack-name demandware-ec2-stack --template-body file://ec2-with-eip.yaml --region us-west-2 --role-arn "arn:aws:iam::854771319312:role/cloudformation-role" --parameters ParameterKey=CustomerName,ParameterValue=demandware ParameterKey=KeyName,ParameterValue=preddy-key
